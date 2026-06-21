@@ -26,6 +26,10 @@ DEFAULTS = {
     "export": {
         "posts_dir": "user/pages/01.posts",   # where post .md files live (for tag/year enumeration)
         "asset_prefixes": ["user", "images", "assets", "theme"],  # path roots treated as static assets
+        # Downloadable page media (served at the page route, e.g. /posts/<slug>/file.pdf)
+        # is captured by extension regardless of path prefix.
+        "download_extensions": ["pdf", "zip", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+                                "csv", "txt", "rtf", "mp3", "mp4", "m4a", "mov", "webm", "epub"],
         "extra_seeds": [],                     # extra routes to always export, e.g. ["/resume"]
         "enumerate_tags": True,                # crawl a /<taxonomy>:<term> page per distinct tag
         "enumerate_archive_years": True,       # crawl a /<archives_param>:<year> page per distinct year

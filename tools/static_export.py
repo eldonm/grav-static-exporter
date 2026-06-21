@@ -37,6 +37,7 @@ PAGE_PREFIX = PAGE_BASE.rstrip('/')                # e.g. "/posts"
 ARCH_PARAM  = EX['archives_param']
 ARCH_BASE   = EX['archives_base'].rstrip('/') + '/'
 ASSET_RE    = re.compile(r'^/(%s)/' % '|'.join(re.escape(p) for p in EX['asset_prefixes']))
+DOWNLOAD_EXTS = {e.lower().lstrip('.') for e in EX['download_extensions']}
 
 
 def fetch(path):
@@ -110,8 +111,16 @@ def collect_assets(text):
         u = html.unescape(url).split('#')[0].split('?')[0]
         if u.startswith(PROD):
             u = u[len(PROD):]
-        if u.startswith('/') and ASSET_RE.match(u):
+        if not u.startswith('/'):
+            continue
+        if ASSET_RE.match(u):
             assets.add(u)
+        else:
+            # downloadable page media (e.g. /posts/<slug>/file.pdf) — capture by extension
+            last = u.rsplit('/', 1)[-1]
+            ext = last.rsplit('.', 1)[-1].lower() if '.' in last else ''
+            if ext in DOWNLOAD_EXTS:
+                assets.add(u)
     return assets
 
 
