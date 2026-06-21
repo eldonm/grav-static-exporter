@@ -1,0 +1,39 @@
+name: Deploy static site to Cloudflare Pages
+
+# Builds the Grav site to static HTML (controlled export + Pagefind) and
+# deploys to Cloudflare Pages on every push to main.
+#
+# Required GitHub repo secrets:
+#   CLOUDFLARE_API_TOKEN  - token with "Cloudflare Pages: Edit" permission
+#   CLOUDFLARE_ACCOUNT_ID - your Cloudflare account id
+# And a Cloudflare Pages project named "eldonmarks" (Direct Upload / no framework).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build static site (Grav -> export -> Pagefind)
+        run: bash tools/build-static.sh
+        # ubuntu-latest ships Docker + python3; Node from setup-node above.
+
+      - name: Read Pages project name from config
+        id: cfg
+        run: echo "project=$(jq -r .deploy.cloudflare_pages_project static-export.config.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy output --project-name=${{ steps.cfg.outputs.project }} --branch=main --commit-dirty=true

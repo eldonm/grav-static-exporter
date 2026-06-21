@@ -1,0 +1,6 @@
+# build artifact
+/output/
+
+# python bytecode
+__pycache__/
+*.pyc

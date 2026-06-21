@@ -1,0 +1,39 @@
+{
+  "site": {
+    "prod_url": "https://YOURSITE.com",
+    "host": "YOURSITE.com"
+  },
+  "export": {
+    "posts_dir": "user/pages/01.posts",
+    "asset_prefixes": ["user", "images", "assets", "theme"],
+    "extra_seeds": [],
+    "enumerate_tags": true,
+    "enumerate_archive_years": true,
+    "sections": {
+      "/section-route": "Tag Display Name"
+    },
+    "taxonomy_param": "tag",
+    "taxonomy_base": "/tag/",
+    "pagination_base": "/posts/",
+    "archives_param": "archives_year",
+    "archives_base": "/archives/"
+  },
+  "pagefind": {
+    "enabled": true,
+    "form_attr": "data-simplesearch-form",
+    "popup_id": "flq_popup_search",
+    "post_path_prefix": "posts",
+    "post_body": {
+      "find": "<div class=\"flq-post-content",
+      "replace": "<div data-pagefind-body class=\"flq-post-content"
+    },
+    "post_title": {
+      "find": "<h1 class=\"display-5 mb-3\"",
+      "replace": "<h1 data-pagefind-meta=\"title\" class=\"display-5 mb-3\""
+    },
+    "css": null
+  },
+  "deploy": {
+    "cloudflare_pages_project": "YOURSITE"
+  }
+}
