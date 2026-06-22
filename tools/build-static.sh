@@ -39,4 +39,7 @@ python3 tools/inject_pagefind.py "./$OUT"
 echo "==> Pagefind index (respects data-pagefind-body scoping)"
 npx -y pagefind --site "$OUT"
 
+echo "==> Agent-readiness markdown (llms.txt, per-page .md)"
+python3 tools/gen_markdown.py "./$OUT"
+
 echo "==> Done. Static site in ./$OUT ($(find "$OUT" -type f | wc -l | tr -d ' ') files)"

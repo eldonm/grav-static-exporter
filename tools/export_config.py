@@ -22,6 +22,9 @@ DEFAULTS = {
         # absolute URLs render for production, and these get normalised to https.
         "prod_url": "https://example.com",
         "host": "example.com",
+        # Used for the generated llms.txt / homepage markdown (agent readiness).
+        "title": "",
+        "description": "",
     },
     "export": {
         "posts_dir": "user/pages/01.posts",   # where post .md files live (for tag/year enumeration)
@@ -61,6 +64,20 @@ DEFAULTS = {
     },
     "deploy": {
         "cloudflare_pages_project": "",        # Pages project name (used by the deploy workflow)
+    },
+    # Agent-readiness features (RFC 8288 Link headers, llms.txt, markdown-for-agents).
+    "agent": {
+        "generate_llms_txt": True,             # write /llms.txt (agent-facing site index)
+        "generate_markdown": True,             # write per-page .md + homepage index.md (Accept negotiation)
+        # RFC 8288 Link response headers emitted (via _headers) to advertise agent
+        # resources. Defaults use registered relations (service-doc/describedby) that
+        # point to real files, so they're honest for a static content site.
+        "link_headers": [
+            {"href": "/llms.txt", "rel": "service-doc"},
+            {"href": "/llms.txt", "rel": "describedby"},
+            {"href": "/feed.xml", "rel": "alternate", "type": "application/rss+xml"},
+            {"href": "/sitemap.xml", "rel": "sitemap"},
+        ],
     },
 }
 

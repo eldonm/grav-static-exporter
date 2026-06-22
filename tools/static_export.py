@@ -266,10 +266,13 @@ def main():
     # revalidate. Pages purges its edge cache per deploy and browsers revalidate via
     # ETag (cheap 304s), so content is never stale after an update.
     with open(os.path.join(OUT, '_headers'), 'w') as f:
-        f.write(
-            "/*\n"
-            "  Cache-Control: public, max-age=0, must-revalidate\n"
-        )
+        f.write("/*\n  Cache-Control: public, max-age=0, must-revalidate\n")
+        # RFC 8288 Link headers advertising agent-discovery resources.
+        for lh in CFG.get('agent', {}).get('link_headers', []):
+            parts = ['<%s>' % lh['href'], 'rel="%s"' % lh['rel']]
+            if lh.get('type'):
+                parts.append('type="%s"' % lh['type'])
+            f.write('  Link: %s\n' % '; '.join(parts))
     # robots.txt is copied into OUT by the build script (build-static.sh)
     print('PAGES: %d | ASSETS: %d -> %s' % (len(pages), len(assets), OUT))
 

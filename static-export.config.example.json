@@ -1,7 +1,9 @@
 {
   "site": {
     "prod_url": "https://YOURSITE.com",
-    "host": "YOURSITE.com"
+    "host": "YOURSITE.com",
+    "title": "Your Site Name",
+    "description": "One-paragraph site description (used in llms.txt and homepage markdown)."
   },
   "export": {
     "posts_dir": "user/pages/01.posts",
