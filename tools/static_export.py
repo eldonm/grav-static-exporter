@@ -108,7 +108,8 @@ def rewrite_html(body):
 def collect_assets(text):
     assets = set()
     for _, _, url in LINK_RE.findall(text):
-        u = html.unescape(url).split('#')[0].split('?')[0]
+        # store the DECODED path (literal filename); the fetch step re-encodes it.
+        u = urllib.parse.unquote(html.unescape(url)).split('#')[0].split('?')[0]
         if u.startswith(PROD):
             u = u[len(PROD):]
         if not u.startswith('/'):
@@ -224,7 +225,10 @@ def main():
             continue
         done.add(a)
         try:
-            status, ctype, body = fetch(a)
+            # `a` is a decoded path (may contain spaces/special chars); re-encode for
+            # the HTTP request, but write to the literal decoded path so the static
+            # host serves it at the browser's percent-encoded URL.
+            status, ctype, body = fetch('/' + urllib.parse.quote(a.lstrip('/')))
         except Exception as e:
             print('  asset SKIP', a, e); continue
         if status != 200:
@@ -236,7 +240,7 @@ def main():
         if a.endswith('.css'):
             base_dir = posixpath.dirname(a)
             for u in re.findall(r'url\(\s*["\']?([^"\')]+)', body.decode('utf-8', 'replace')):
-                u = u.split('#')[0].split('?')[0].strip()
+                u = urllib.parse.unquote(u.split('#')[0].split('?')[0].strip())
                 if not u or u.startswith('data:') or u.startswith('http'):
                     continue
                 full = posixpath.normpath(posixpath.join(base_dir, u))
