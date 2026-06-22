@@ -7,7 +7,15 @@ cd "$(dirname "$0")/.."
 
 PORT="${PORT:-8092}"
 OUT="${OUT:-output}"
-IMG="em-static-build"
+
+# Per-site Docker image name so building multiple Grav sites locally doesn't
+# clobber a shared image. Derived from the config's Pages project name, falling
+# back to the repo directory; sanitized to a valid image tag. Override with IMG=.
+CONFIG="${STATIC_EXPORT_CONFIG:-static-export.config.json}"
+PROJECT="$(python3 -c "import json; print(json.load(open('$CONFIG'))['deploy']['cloudflare_pages_project'])" 2>/dev/null || true)"
+[ -n "${PROJECT:-}" ] || PROJECT="$(basename "$PWD")"
+SLUG="$(printf '%s' "$PROJECT" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9_.-' '-' | sed 's/^-*//; s/-*$//')"
+IMG="${IMG:-grav-static-export-${SLUG:-site}}"
 
 echo "==> Building Grav image"
 docker build -t "$IMG" .
