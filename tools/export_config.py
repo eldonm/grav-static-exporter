@@ -69,6 +69,8 @@ DEFAULTS = {
     "agent": {
         "generate_llms_txt": True,             # write /llms.txt (agent-facing site index)
         "generate_markdown": True,             # write per-page .md + homepage index.md (Accept negotiation)
+        "generate_agent_skills": True,         # write /.well-known/agent-skills/{index.json,*/SKILL.md}
+        "webmcp": True,                         # register a WebMCP search tool (navigator.modelContext) on each page
         # RFC 8288 Link response headers emitted (via _headers) to advertise agent
         # resources. Defaults use registered relations (service-doc/describedby) that
         # point to real files, so they're honest for a static content site.

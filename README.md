@@ -103,8 +103,17 @@ content site — no fake API/OAuth/MCP):
   default. Functions mode keeps `_headers`/`_redirects` working.
 - **Content Signals** — add a `Content-Signal:` line under `User-agent: *` in your
   `robots.txt` (e.g. `Content-Signal: ai-train=no, search=yes, ai-input=yes`).
+- **WebMCP** — registers a `search_site` tool (`navigator.modelContext.registerTool`)
+  on each page, backed by the Pagefind search API; no-ops where WebMCP is absent.
+- **Agent skills index** — `/.well-known/agent-skills/index.json` (RFC v0.2.0) plus a
+  generated `SKILL.md` documenting the site's agent affordances, with a sha256 digest.
 
-Toggle generation with `agent.generate_llms_txt` / `agent.generate_markdown`.
+Toggle with `agent.generate_llms_txt` / `agent.generate_markdown` /
+`agent.generate_agent_skills` / `agent.webmcp`.
+
+These cover the honest agent-discovery checks for a static content site. The
+API-catalog / OAuth / MCP-server / DNS-AID checks are intentionally **not**
+implemented — they advertise backend services a static site doesn't run.
 
 ## Caveats (hard-won)
 

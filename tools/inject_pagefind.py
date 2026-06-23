@@ -17,6 +17,8 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else 'output'
 CFG = load_config(sys.argv[2] if len(sys.argv) > 2 else None)
 
 PF = CFG['pagefind']
+WEBMCP     = CFG.get('agent', {}).get('webmcp', True)
+SITE_TITLE = CFG.get('site', {}).get('title') or CFG.get('site', {}).get('host') or 'this site'
 FORM_ATTR    = PF['form_attr']
 POPUP_ID     = PF['popup_id']
 POST_PREFIX  = PF['post_path_prefix']
@@ -96,6 +98,35 @@ window.addEventListener("DOMContentLoaded", function () {
 </script>'''.replace('__POPUP_ID__', POPUP_ID)
 
 
+# WebMCP: expose Pagefind site search as a browser-agent tool. Registers on load
+# when navigator.modelContext is available; no-ops in browsers without WebMCP.
+WEBMCP_SCRIPT = '''<script>
+(function () {
+  function reg() {
+    var mc = navigator.modelContext;
+    if (!mc || typeof mc.registerTool !== "function") return;
+    try {
+      mc.registerTool({
+        name: "search_site",
+        description: "Full-text search of __TITLE__ posts and pages.",
+        inputSchema: {type: "object", properties: {query: {type: "string", description: "Search keywords"}}, required: ["query"]},
+        execute: async function (input) {
+          var pf = await import("/pagefind/pagefind.js");
+          var s = await pf.search((input && input.query) || "");
+          var top = await Promise.all(s.results.slice(0, 8).map(function (r) { return r.data(); }));
+          return {content: top.map(function (d) {
+            return {type: "text", text: (d.meta && d.meta.title ? d.meta.title : d.url) + "\\n" + location.origin + d.url + "\\n" + (d.excerpt || "")};
+          })};
+        }
+      });
+    } catch (e) { console.error("WebMCP registerTool failed", e); }
+  }
+  if (document.readyState !== "loading") reg();
+  else document.addEventListener("DOMContentLoaded", reg);
+})();
+</script>'''.replace('__TITLE__', SITE_TITLE.replace('"', '\\"'))
+
+
 def process(path):
     with open(path, encoding='utf-8') as f:
         html = f.read()
@@ -119,6 +150,8 @@ def process(path):
         html = html.replace('</head>', PF_HEAD + '\n</head>', 1)
     if '/pagefind/pagefind-ui.js' not in html:
         html = html.replace('</body>', PF_INIT + '\n</body>', 1)
+    if WEBMCP and 'navigator.modelContext' not in html:
+        html = html.replace('</body>', WEBMCP_SCRIPT + '\n</body>', 1)
     with open(path, 'w', encoding='utf-8') as f:
         f.write(html)
     return True

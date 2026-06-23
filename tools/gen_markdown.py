@@ -13,7 +13,7 @@ Site title/description come from static-export.config.json (site.title/descripti
 
 Usage: python3 tools/gen_markdown.py ./output [config.json]
 """
-import sys, os, re
+import sys, os, re, json, hashlib
 from export_config import load_config
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'output'
@@ -82,8 +82,58 @@ def first_paragraph(body):
     return ''
 
 
+SKILL_NAME = 'consume-site-content'
+
+
+def gen_agent_skills():
+    """A real, honest agent skill: how to consume this static site (markdown
+    negotiation, llms.txt, RSS, Pagefind search), plus the discovery index."""
+    wk = os.path.join(OUT, '.well-known', 'agent-skills')
+    skill_dir = os.path.join(wk, SKILL_NAME)
+    os.makedirs(skill_dir, exist_ok=True)
+    skill_md = (
+        '---\n'
+        'name: %s\n'
+        'description: How to read and search %s as an AI agent.\n'
+        '---\n\n'
+        '# Consuming %s\n\n'
+        '%s is a static content site. Machine-friendly access:\n\n'
+        '## Markdown\n\n'
+        'Request any page with header `Accept: text/markdown` to receive clean '
+        'markdown instead of HTML. Example:\n\n'
+        '```\ncurl -H "Accept: text/markdown" %s/\n```\n\n'
+        '## Site index\n\n'
+        '- `%s/llms.txt` — site overview + post list (llmstxt.org format)\n'
+        '- `%s/sitemap.xml` — every URL\n'
+        '- `%s/feed.xml` — RSS feed of posts\n\n'
+        '## Search\n\n'
+        'Full-text search index ([Pagefind](https://pagefind.app)) at '
+        '`%s/pagefind/`. Load `/pagefind/pagefind.js` and call '
+        '`pagefind.search("query")`.\n'
+        % (SKILL_NAME, TITLE, TITLE, TITLE, PROD, PROD, PROD, PROD, PROD)
+    )
+    with open(os.path.join(skill_dir, 'SKILL.md'), 'w', encoding='utf-8') as f:
+        f.write(skill_md)
+    digest = hashlib.sha256(skill_md.encode('utf-8')).hexdigest()
+    index = {
+        '$schema': 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
+        'skills': [{
+            'name': SKILL_NAME,
+            'type': 'skill-md',
+            'description': ('How to read and search %s as an AI agent '
+                            '(markdown negotiation, llms.txt, RSS, search).' % TITLE),
+            'url': '%s/.well-known/agent-skills/%s/SKILL.md' % (PROD, SKILL_NAME),
+            'digest': 'sha256:' + digest,
+        }],
+    }
+    with open(os.path.join(wk, 'index.json'), 'w', encoding='utf-8') as f:
+        json.dump(index, f, indent=2)
+
+
 def main():
     posts = collect_posts()
+    if AG.get('generate_agent_skills', True):
+        gen_agent_skills()
 
     # --- per-post markdown (for Accept: text/markdown negotiation) ---
     if AG.get('generate_markdown', True):
